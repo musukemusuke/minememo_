@@ -1,0 +1,32 @@
+{
+  "name": "r",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "deploy-commands": "node dist/deploy-commands.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/musukemusuke/minememo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/musukemusuke/minememo/issues"
+  },
+  "homepage": "https://github.com/musukemusuke/minememo#readme",
+  "dependencies": {
+    "@types/node": "^26.6.3",
+    "discord.js": "^14.27.0",
+    "dotenv": "^18.0.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^7.0.2"
+  }
+}

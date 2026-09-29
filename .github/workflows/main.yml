@@ -1,0 +1,48 @@
+name: Minecraft Command Bot
+
+# コードがプッシュされたときと、3時間ごとに実行
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 */3 * * *' # 3時間ごとに実行
+  workflow_dispatch: # 手動で実行可能にする
+
+# GitHub Actionsにリポジトリの読み取り権限のみ付与
+permissions:
+  contents: read
+
+# 古いジョブを自動的にキャンセル
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set timezone to Japan
+        run: |
+          sudo timedatectl set-timezone Asia/Tokyo
+          date
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Run bot
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          NODE_ENV: 'production'
+        run: npm start
