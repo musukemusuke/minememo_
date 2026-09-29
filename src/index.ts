@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Interaction, TextChannel, EmbedBuilder, ChannelType, StringSelectMenuBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageType } from 'discord.js';
+import { Client, GatewayIntentBits, Interaction, TextChannel, EmbedBuilder, ChannelType, StringSelectMenuBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageType, Message } from 'discord.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -334,9 +334,22 @@ client.on('interactionCreate', async (interaction: any) => {
         });
 
         // スレッド作成時のシステムメッセージを削除
-        const starterMessage = await thread.messages.fetch({ limit: 1 });
-        if (starterMessage.first() && starterMessage.first()?.type === MessageType.ThreadStarterMessage) {
-          await starterMessage.first()?.delete();
+        // DiscordのシステムメッセージはMessageType.ThreadStarterMessageとして識別されることが多いですが、
+        // タイミングやBotの権限によっては削除できない場合があります。
+        try {
+          // 最初の数件のメッセージをフェッチし、システムメッセージを探す
+          const messages = await thread.messages.fetch({ limit: 5 });
+          const starterMessage = messages.find((msg: Message) => msg.type === MessageType.ThreadStarterMessage);
+
+          if (starterMessage) {
+            await starterMessage.delete();
+            console.log(`スレッド「${thread.name}」のシステムメッセージを削除しました。`);
+          } else {
+            console.log(`スレッド「${thread.name}」にシステムメッセージが見つかりませんでした。`);
+          }
+        } catch (deleteError) {
+          console.error(`スレッド「${thread.name}」のシステムメッセージ削除中にエラーが発生しました:`, deleteError);
+          // ユーザーにはエラーを通知しないが、ログには残す
         }
 
         // Embedを作成
