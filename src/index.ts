@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Interaction, TextChannel, EmbedBuilder, ChannelType, StringSelectMenuBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { Client, GatewayIntentBits, Interaction, TextChannel, EmbedBuilder, ChannelType, StringSelectMenuBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageType } from 'discord.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -332,6 +332,12 @@ client.on('interactionCreate', async (interaction: any) => {
           autoArchiveDuration: 60,
           reason: `${name} コマンドの追加`,
         });
+
+        // スレッド作成時のシステムメッセージを削除
+        const starterMessage = await thread.messages.fetch({ limit: 1 });
+        if (starterMessage.first() && starterMessage.first()?.type === MessageType.ThreadStarterMessage) {
+          await starterMessage.first()?.delete();
+        }
 
         // Embedを作成
         const commandEmbed = new EmbedBuilder()

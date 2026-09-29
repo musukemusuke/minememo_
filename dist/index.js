@@ -308,6 +308,11 @@ client.on('interactionCreate', async (interaction) => {
                         autoArchiveDuration: 60,
                         reason: `${name} コマンドの追加`,
                     });
+                    // スレッド作成時のシステムメッセージを削除
+                    const starterMessage = await thread.messages.fetch({ limit: 1 });
+                    if (starterMessage.first() && starterMessage.first()?.type === discord_js_1.MessageType.ThreadStarterMessage) {
+                        await starterMessage.first()?.delete();
+                    }
                     // Embedを作成
                     const commandEmbed = new discord_js_1.EmbedBuilder()
                         .setColor(0x0099FF) // 青色
