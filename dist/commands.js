@@ -13,6 +13,6 @@ exports.commands = [
         .setName('deletecommand')
         .setDescription('登録されているMinecraftコマンドを削除します'),
     new discord_js_1.SlashCommandBuilder()
-        .setName('searchcommands')
+        .setName('findcmd')
         .setDescription('Minecraftコマンドをキーワードで検索します'),
 ].map(command => command.toJSON());
