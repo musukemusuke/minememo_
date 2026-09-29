@@ -225,10 +225,12 @@ client.on('interactionCreate', async (interaction: any) => {
 
   // セレクトメニューのインタラクションを処理
   if (interaction.isStringSelectMenu() && interaction.customId === 'deletecommands-select') {
+    await interaction.deferUpdate(); // インタラクションを遅延させる
+
     const threadIdToDelete = interaction.values[0];
 
     if (!interaction.guild) {
-      await interaction.reply({ content: 'サーバー内でのみ実行可能です。', ephemeral: true });
+      await interaction.editReply({ content: 'サーバー内でのみ実行可能です。', components: [] });
       return;
     }
 
@@ -239,7 +241,7 @@ client.on('interactionCreate', async (interaction: any) => {
       if (targetThread) {
         await targetThread.delete();
         console.log(`スレッドID「${threadIdToDelete}」を削除しました。`);
-        await interaction.reply({ content: 'コマンドを削除しました。', ephemeral: true });
+        await interaction.editReply({ content: 'コマンドを削除しました。', components: [] });
       } else {
         // アーカイブされている場合も検索して削除
         const allChannels = await interaction.guild.channels.fetch();
@@ -263,14 +265,14 @@ client.on('interactionCreate', async (interaction: any) => {
         }
         
         if (found) {
-          await interaction.reply({ content: 'コマンドを削除しました。', ephemeral: true });
+          await interaction.editReply({ content: 'コマンドを削除しました。', components: [] });
         } else {
-          await interaction.reply({ content: 'スレッドが見つかりませんでした。', ephemeral: true });
+          await interaction.editReply({ content: 'スレッドが見つかりませんでした。', components: [] });
         }
       }
     } catch (err) {
       console.error('スレッドの削除中にエラーが発生しました:', err);
-      await interaction.reply({ content: 'スレッドの削除中にエラーが発生しました。', ephemeral: true });
+      await interaction.editReply({ content: 'スレッドの削除中にエラーが発生しました。', components: [] });
     }
   }
 

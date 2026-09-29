@@ -206,9 +206,10 @@ client.on('interactionCreate', async (interaction) => {
         }
         // セレクトメニューのインタラクションを処理
         if (interaction.isStringSelectMenu() && interaction.customId === 'deletecommands-select') {
+            await interaction.deferUpdate(); // インタラクションを遅延させる
             const threadIdToDelete = interaction.values[0];
             if (!interaction.guild) {
-                await interaction.reply({ content: 'サーバー内でのみ実行可能です。', ephemeral: true });
+                await interaction.editReply({ content: 'サーバー内でのみ実行可能です。', components: [] });
                 return;
             }
             // スレッドIDで直接スレッドを取得して削除
@@ -217,7 +218,7 @@ client.on('interactionCreate', async (interaction) => {
                 if (targetThread) {
                     await targetThread.delete();
                     console.log(`スレッドID「${threadIdToDelete}」を削除しました。`);
-                    await interaction.reply({ content: 'コマンドを削除しました。', ephemeral: true });
+                    await interaction.editReply({ content: 'コマンドを削除しました。', components: [] });
                 }
                 else {
                     // アーカイブされている場合も検索して削除
@@ -241,16 +242,16 @@ client.on('interactionCreate', async (interaction) => {
                         }
                     }
                     if (found) {
-                        await interaction.reply({ content: 'コマンドを削除しました。', ephemeral: true });
+                        await interaction.editReply({ content: 'コマンドを削除しました。', components: [] });
                     }
                     else {
-                        await interaction.reply({ content: 'スレッドが見つかりませんでした。', ephemeral: true });
+                        await interaction.editReply({ content: 'スレッドが見つかりませんでした。', components: [] });
                     }
                 }
             }
             catch (err) {
                 console.error('スレッドの削除中にエラーが発生しました:', err);
-                await interaction.reply({ content: 'スレッドの削除中にエラーが発生しました。', ephemeral: true });
+                await interaction.editReply({ content: 'スレッドの削除中にエラーが発生しました。', components: [] });
             }
         }
         // モーダル送信のインタラクションを処理
@@ -308,29 +309,6 @@ client.on('interactionCreate', async (interaction) => {
                         autoArchiveDuration: 60,
                         reason: `${name} コマンドの追加`,
                     });
-                    // スレッド作成時のシステムメッセージを削除
-                    // DiscordのシステムメッセージはMessageType.ThreadStarterMessageとして識別されることが多いですが、
-                    // タイミングやBotの権限によっては削除できない場合があります。
-                    try {
-                        // 最初の数件のメッセージをフェッチし、システムメッセージを探す
-                        const messages = await thread.messages.fetch({ limit: 5 });
-                        // デバッグ用に取得したメッセージのタイプを全てログに出力
-                        messages.forEach((msg) => {
-                            console.log(`Fetched message ID: ${msg.id}, Type: ${msg.type}, Content: ${msg.content.substring(0, 50)}...`);
-                        });
-                        const starterMessage = messages.find((msg) => msg.type === discord_js_1.MessageType.ThreadStarterMessage);
-                        if (starterMessage) {
-                            await starterMessage.delete();
-                            console.log(`スレッド「${thread.name}」のシステムメッセージを削除しました。`);
-                        }
-                        else {
-                            console.log(`スレッド「${thread.name}」にシステムメッセージが見つかりませんでした。`);
-                        }
-                    }
-                    catch (deleteError) {
-                        console.error(`スレッド「${thread.name}」のシステムメッセージ削除中にエラーが発生しました:`, deleteError);
-                        // ユーザーにはエラーを通知しないが、ログには残す
-                    }
                     // Embedを作成
                     const commandEmbed = new discord_js_1.EmbedBuilder()
                         .setColor(0x0099FF) // 青色
