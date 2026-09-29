@@ -10,26 +10,35 @@ dotenv_1.default.config();
 const token = process.env.DISCORD_TOKEN;
 const clientId = process.env.CLIENT_ID;
 if (!token || !clientId) {
-    console.error('DISCORD_TOKEN and DISCORD_CLIENT_ID must be provided in .env');
+    console.error('DISCORD_TOKEN and CLIENT_ID must be provided in .env');
     process.exit(1);
 }
 const rest = new discord_js_1.REST({ version: '10' }).setToken(token);
-(async () => {
+const client = new discord_js_1.Client({ intents: [discord_js_1.GatewayIntentBits.Guilds] });
+client.once('ready', async () => {
     try {
         console.log('古いグローバルコマンドを全て削除中...');
         // 現在登録されている全てのグローバルコマンドを取得
-        const currentCommands = await rest.get(discord_js_1.Routes.applicationCommands(clientId));
-        // 全ての古いコマンドを削除
-        for (const command of currentCommands) {
+        const currentGlobalCommands = await rest.get(discord_js_1.Routes.applicationCommands(clientId));
+        // 全ての古いグローバルコマンドを削除
+        for (const command of currentGlobalCommands) {
             await rest.delete(discord_js_1.Routes.applicationCommand(clientId, command.id));
-            console.log(`古いコマンド「${command.name}」を削除しました (ID: ${command.id})`);
+            console.log(`古いグローバルコマンド「${command.name}」を削除しました (ID: ${command.id})`);
         }
-        console.log(`新しいグローバルコマンドを${commands_1.commands.length}個登録中...`);
-        // グローバルコマンドとして新しいコマンドを登録
-        const data = await rest.put(discord_js_1.Routes.applicationCommands(clientId), { body: commands_1.commands });
-        console.log(`正常に${data.length}個のグローバルコマンドを再登録しました。`);
+        // Botが参加している全てのギルドにギルドコマンドを登録
+        const guilds = client.guilds.cache;
+        console.log(`Botが参加しているギルド数: ${guilds.size}`);
+        for (const [guildId, guild] of guilds) {
+            console.log(`ギルド「${guild.name}」(ID: ${guildId})にコマンドを登録中...`);
+            const data = await rest.put(discord_js_1.Routes.applicationGuildCommands(clientId, guildId), { body: commands_1.commands });
+            console.log(`ギルド「${guild.name}」に${data.length}個のコマンドを登録しました。`);
+        }
+        console.log('全てのギルドにコマンドの登録が完了しました。');
+        process.exit(0);
     }
     catch (error) {
         console.error(error);
+        process.exit(1);
     }
-})();
+});
+client.login(token);
