@@ -314,6 +314,10 @@ client.on('interactionCreate', async (interaction) => {
                     try {
                         // 最初の数件のメッセージをフェッチし、システムメッセージを探す
                         const messages = await thread.messages.fetch({ limit: 5 });
+                        // デバッグ用に取得したメッセージのタイプを全てログに出力
+                        messages.forEach((msg) => {
+                            console.log(`Fetched message ID: ${msg.id}, Type: ${msg.type}, Content: ${msg.content.substring(0, 50)}...`);
+                        });
                         const starterMessage = messages.find((msg) => msg.type === discord_js_1.MessageType.ThreadStarterMessage);
                         if (starterMessage) {
                             await starterMessage.delete();
