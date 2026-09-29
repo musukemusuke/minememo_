@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from 'discord.js';
 
 export const commands = [
   new SlashCommandBuilder()
-    .setName('addcommand')
+    .setName('addcommands')
     .setDescription('Minecraftコマンドを登録します'),
 
   new SlashCommandBuilder()
@@ -10,7 +10,7 @@ export const commands = [
     .setDescription('登録されているMinecraftコマンドを一覧表示します'),
 
   new SlashCommandBuilder()
-    .setName('deletecommand')
+    .setName('deletecommands')
     .setDescription('登録されているMinecraftコマンドを削除します'),
 
   new SlashCommandBuilder()

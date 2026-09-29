@@ -56,10 +56,10 @@ client.on('interactionCreate', async (interaction) => {
         let commandName;
         if (interaction.isChatInputCommand()) {
             commandName = interaction.commandName;
-            if (commandName === 'addcommand') {
+            if (commandName === 'addcommands') {
                 // モーダルを作成
                 const modal = new discord_js_1.ModalBuilder()
-                    .setCustomId('addcommand-modal')
+                    .setCustomId('addcommands-modal')
                     .setTitle('Minecraftコマンドを登録');
                 // 名前用のテキスト入力
                 const nameInput = new discord_js_1.TextInputBuilder()
@@ -151,7 +151,7 @@ client.on('interactionCreate', async (interaction) => {
                 modal.addComponents(actionRow);
                 await interaction.showModal(modal);
             }
-            else if (commandName === 'deletecommand') {
+            else if (commandName === 'deletecommands') {
                 if (!interaction.guild) {
                     await interaction.reply({ content: 'サーバー内でのみ実行可能です。', ephemeral: true });
                     return;
@@ -193,7 +193,7 @@ client.on('interactionCreate', async (interaction) => {
                 }
                 // セレクトメニューを作成
                 const selectMenu = new discord_js_1.StringSelectMenuBuilder()
-                    .setCustomId('deletecommand-select')
+                    .setCustomId('deletecommands-select')
                     .setPlaceholder('削除するコマンドを選択してください')
                     .addOptions(selectOptions);
                 const actionRow = new discord_js_1.ActionRowBuilder().addComponents(selectMenu);
@@ -205,7 +205,7 @@ client.on('interactionCreate', async (interaction) => {
             }
         }
         // セレクトメニューのインタラクションを処理
-        if (interaction.isStringSelectMenu() && interaction.customId === 'deletecommand-select') {
+        if (interaction.isStringSelectMenu() && interaction.customId === 'deletecommands-select') {
             const threadIdToDelete = interaction.values[0];
             if (!interaction.guild) {
                 await interaction.reply({ content: 'サーバー内でのみ実行可能です。', ephemeral: true });
@@ -254,7 +254,7 @@ client.on('interactionCreate', async (interaction) => {
             }
         }
         // モーダル送信のインタラクションを処理
-        if (interaction.isModalSubmit() && interaction.customId === 'addcommand-modal') {
+        if (interaction.isModalSubmit() && interaction.customId === 'addcommands-modal') {
             try {
                 const name = interaction.fields.getTextInputValue('name');
                 const mcCommand = interaction.fields.getTextInputValue('command');
