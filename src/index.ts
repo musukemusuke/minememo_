@@ -228,51 +228,60 @@ client.on('interactionCreate', async (interaction: any) => {
     await interaction.deferUpdate(); // インタラクションを遅延させる
 
     const threadIdToDelete = interaction.values[0];
+    let replyContent = '不明なエラーが発生しました。'; // デフォルトのエラーメッセージ
 
     if (!interaction.guild) {
-      await interaction.editReply({ content: 'サーバー内でのみ実行可能です。', components: [] });
-      return;
-    }
-
-    // スレッドIDで直接スレッドを取得して削除
-    try {
-      const targetThread = await interaction.guild.channels.fetch(threadIdToDelete).catch(() => null);
-      
-      if (targetThread) {
-        await targetThread.delete();
-        console.log(`スレッドID「${threadIdToDelete}」を削除しました。`);
-        await interaction.editReply({ content: 'コマンドを削除しました。', components: [] });
-      } else {
-        // アーカイブされている場合も検索して削除
-        const allChannels = await interaction.guild.channels.fetch();
-        let found = false;
-        for (const [_, channel] of allChannels) {
-          if (channel instanceof TextChannel) {
-            try {
-              const archivedThreads = await channel.threads.fetchArchived();
-              const targetThreadArchived = archivedThreads.threads.find((thread: any) => thread.id === threadIdToDelete);
-              
-              if (targetThreadArchived) {
-                await targetThreadArchived.delete();
-                console.log(`アーカイブ済みのスレッドID「${threadIdToDelete}」を削除しました。`);
-                found = true;
-                break;
+      replyContent = 'サーバー内でのみ実行可能です。';
+    } else {
+      try {
+        const targetThread = await interaction.guild.channels.fetch(threadIdToDelete).catch(() => null);
+        
+        if (targetThread) {
+          await targetThread.delete();
+          console.log(`スレッドID「${threadIdToDelete}」を削除しました。`);
+          replyContent = 'コマンドを削除しました。';
+        } else {
+          // アーカイブされている場合も検索して削除
+          const allChannels = await interaction.guild.channels.fetch();
+          let found = false;
+          for (const [_, channel] of allChannels) {
+            if (channel instanceof TextChannel) {
+              try {
+                const archivedThreads = await channel.threads.fetchArchived();
+                const targetThreadArchived = archivedThreads.threads.find((thread: any) => thread.id === threadIdToDelete);
+                
+                if (targetThreadArchived) {
+                  await targetThreadArchived.delete();
+                  console.log(`アーカイブ済みのスレッドID「${threadIdToDelete}」を削除しました。`);
+                  found = true;
+                  break;
+                }
+              } catch (err) {
+                console.error('アーカイブスレッドの検索中にエラー:', err);
+                // エラーが発生しても処理を続行
               }
-            } catch (err) {
-              // アーカイブされたスレッドの取得に失敗しても処理を続行
             }
           }
+          
+          if (found) {
+            replyContent = 'コマンドを削除しました。';
+          } else {
+            replyContent = 'スレッドが見つかりませんでした。';
+          }
         }
-        
-        if (found) {
-          await interaction.editReply({ content: 'コマンドを削除しました。', components: [] });
-        } else {
-          await interaction.editReply({ content: 'スレッドが見つかりませんでした。', components: [] });
-        }
+      } catch (err) {
+        console.error('スレッドの削除中にエラーが発生しました:', err);
+        replyContent = 'スレッドの削除中にエラーが発生しました。';
       }
-    } catch (err) {
-      console.error('スレッドの削除中にエラーが発生しました:', err);
-      await interaction.editReply({ content: 'スレッドの削除中にエラーが発生しました。', components: [] });
+    }
+
+    // 最終的な応答を編集
+    try {
+      await interaction.editReply({ content: replyContent, components: [] });
+    } catch (editError) {
+      console.error('editReplyの実行中にエラーが発生しました:', editError);
+      // editReplyが失敗した場合、Discordのデフォルトメッセージを防ぐために何もしない
+      // （ユーザーは新しいメッセージを望んでいないため、followUpは使用しない）
     }
   }
 
