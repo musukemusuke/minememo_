@@ -133,12 +133,12 @@ client.on('interactionCreate', async (interaction) => {
                 }
                 await interaction.reply({ embeds: [listEmbed], ephemeral: true });
             }
-            else if (commandName === 'findcmd') {
+            else if (commandName === 'searchcommands') {
                 if (!interaction.guild) {
                     await interaction.reply({ content: 'サーバー内でのみ実行可能です。', ephemeral: true });
                     return;
                 }
-                // 検索キーワードを入力するモーダルを表示（searchcommandsと同じ処理）
+                // 検索キーワードを入力するモーダルを表示
                 const modal = new discord_js_1.ModalBuilder()
                     .setCustomId('searchcommand-modal')
                     .setTitle('コマンドを検索');
