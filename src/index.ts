@@ -245,6 +245,18 @@ client.on('interactionCreate', async (interaction: any) => {
       const targetThread = await interaction.guild.channels.fetch(threadIdToDelete).catch(() => null);
       
       if (targetThread) {
+        // スレッドのスターターメッセージ（システムメッセージ）も削除
+        try {
+          const starterMessage = await targetThread.fetchStarterMessage();
+          if (starterMessage) {
+            await starterMessage.delete();
+            console.log(`スレッドID「${threadIdToDelete}」のシステムメッセージを削除しました。`);
+          }
+        } catch (err) {
+          // メッセージが見つからない場合でもスレッドの削除は続行
+          console.log('システムメッセージの削除に失敗しました:', err);
+        }
+        
         await targetThread.delete();
         console.log(`スレッドID「${threadIdToDelete}」を削除しました。`);
       } else {
@@ -258,6 +270,17 @@ client.on('interactionCreate', async (interaction: any) => {
               const targetThreadArchived = archivedThreads.threads.find((thread: any) => thread.id === threadIdToDelete);
               
               if (targetThreadArchived) {
+                // アーカイブされたスレッドのシステムメッセージも削除
+                try {
+                  const starterMessage = await targetThreadArchived.fetchStarterMessage();
+                  if (starterMessage) {
+                    await starterMessage.delete();
+                    console.log(`アーカイブ済みスレッドID「${threadIdToDelete}」のシステムメッセージを削除しました。`);
+                  }
+                } catch (err) {
+                  console.log('アーカイブスレッドのシステムメッセージ削除に失敗:', err);
+                }
+                
                 await targetThreadArchived.delete();
                 console.log(`アーカイブ済みのスレッドID「${threadIdToDelete}」を削除しました。`);
                 found = true;
@@ -349,6 +372,18 @@ client.on('interactionCreate', async (interaction: any) => {
           autoArchiveDuration: 60,
           reason: `${name} コマンドの追加`,
         });
+
+        // スレッド作成のシステムメッセージを取得して削除
+        try {
+          const starterMessage = await thread.fetchStarterMessage();
+          if (starterMessage) {
+            await starterMessage.delete();
+            console.log(`スレッド作成のシステムメッセージを削除しました: ${thread.id}`);
+          }
+        } catch (err) {
+          // メッセージが見つからない場合や削除に失敗しても処理を続行
+          console.log('システムメッセージの削除に失敗しました:', err);
+        }
 
         // Embedを作成
         const commandEmbed = new EmbedBuilder()
