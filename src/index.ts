@@ -225,63 +225,69 @@ client.on('interactionCreate', async (interaction: any) => {
 
   // セレクトメニューのインタラクションを処理
   if (interaction.isStringSelectMenu() && interaction.customId === 'deletecommands-select') {
-    await interaction.deferUpdate(); // インタラクションを遅延させる
-
     const threadIdToDelete = interaction.values[0];
-    let replyContent = '不明なエラーが発生しました。'; // デフォルトのエラーメッセージ
 
     if (!interaction.guild) {
-      replyContent = 'サーバー内でのみ実行可能です。';
-    } else {
+      // ギルド外では実行できないことを通知してメッセージを削除
       try {
-        const targetThread = await interaction.guild.channels.fetch(threadIdToDelete).catch(() => null);
-        
-        if (targetThread) {
-          await targetThread.delete();
-          console.log(`スレッドID「${threadIdToDelete}」を削除しました。`);
-          replyContent = 'コマンドを削除しました。';
-        } else {
-          // アーカイブされている場合も検索して削除
-          const allChannels = await interaction.guild.channels.fetch();
-          let found = false;
-          for (const [_, channel] of allChannels) {
-            if (channel instanceof TextChannel) {
-              try {
-                const archivedThreads = await channel.threads.fetchArchived();
-                const targetThreadArchived = archivedThreads.threads.find((thread: any) => thread.id === threadIdToDelete);
-                
-                if (targetThreadArchived) {
-                  await targetThreadArchived.delete();
-                  console.log(`アーカイブ済みのスレッドID「${threadIdToDelete}」を削除しました。`);
-                  found = true;
-                  break;
-                }
-              } catch (err) {
-                console.error('アーカイブスレッドの検索中にエラー:', err);
-                // エラーが発生しても処理を続行
-              }
-            }
-          }
-          
-          if (found) {
-            replyContent = 'コマンドを削除しました。';
-          } else {
-            replyContent = 'スレッドが見つかりませんでした。';
-          }
-        }
-      } catch (err) {
-        console.error('スレッドの削除中にエラーが発生しました:', err);
-        replyContent = 'スレッドの削除中にエラーが発生しました。';
+        await interaction.update({ content: 'サーバー内でのみ実行可能です。', components: [] });
+        setTimeout(async () => {
+          try { await interaction.deleteReply(); } catch {}
+        }, 2000);
+      } catch {
+        // 失敗しても何もしない
       }
+      return;
     }
 
-    // 最終的な応答を編集
+    // スレッドIDで直接スレッドを取得して削除
     try {
-      await interaction.editReply({ content: replyContent, components: [] });
-    } catch (editError) {
-      console.error('editReplyの実行中にエラーが発生しました:', editError);
-      // editReplyが失敗した場合、Discordのデフォルトメッセージを防ぐために何もしない
-      // （ユーザーは新しいメッセージを望んでいないため、followUpは使用しない）
+      const targetThread = await interaction.guild.channels.fetch(threadIdToDelete).catch(() => null);
+      
+      if (targetThread) {
+        await targetThread.delete();
+        console.log(`スレッドID「${threadIdToDelete}」を削除しました。`);
+      } else {
+        // アーカイブされている場合も検索して削除
+        const allChannels = await interaction.guild.channels.fetch();
+        let found = false;
+        for (const [_, channel] of allChannels) {
+          if (channel instanceof TextChannel) {
+            try {
+              const archivedThreads = await channel.threads.fetchArchived();
+              const targetThreadArchived = archivedThreads.threads.find((thread: any) => thread.id === threadIdToDelete);
+              
+              if (targetThreadArchived) {
+                await targetThreadArchived.delete();
+                console.log(`アーカイブ済みのスレッドID「${threadIdToDelete}」を削除しました。`);
+                found = true;
+                break;
+              }
+            } catch (err) {
+              console.error('アーカイブスレッドの検索中にエラー:', err);
+              // エラーが発生しても処理を続行
+            }
+          }
+        }
+      }
+
+      // スレッド削除完了後、元のメッセージを更新して2秒後に削除
+      await interaction.update({ content: 'コマンドを削除しました。', components: [] });
+      setTimeout(async () => {
+        try { await interaction.deleteReply(); } catch {}
+      }, 2000);
+
+    } catch (err) {
+      console.error('スレッドの削除中にエラーが発生しました:', err);
+      // エラーが発生した場合もメッセージを更新して2秒後に削除
+      try {
+        await interaction.update({ content: 'スレッドの削除中にエラーが発生しました。', components: [] });
+        setTimeout(async () => {
+          try { await interaction.deleteReply(); } catch {}
+        }, 2000);
+      } catch {
+        // 失敗しても何もしない
+      }
     }
   }
 
